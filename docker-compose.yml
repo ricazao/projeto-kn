@@ -1,0 +1,64 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: .docker/app/Dockerfile
+        ports:
+            - 8888:80
+        volumes:
+            - .:/var/www/html
+        command: /usr/local/bin/start.sh
+        depends_on:
+            - db
+            - redis
+
+    db:
+        image: mysql
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: db_projeto_kn
+        volumes:
+            - db_data:/data/db
+        deploy:
+            resources:
+                limits:
+                    memory: 4G
+
+    redis:
+        image: redis:alpine
+        ports:
+            - 6379:6379
+        volumes:
+            - ./.docker/redis/:/etc/redis/
+            - redis_data:/data
+        command: ["redis-server", "/etc/redis/redis.conf"]
+
+    queue-worker:
+        build:
+            context: .
+            dockerfile: .docker/worker/Dockerfile
+        volumes:
+            - .:/var/www/html
+        working_dir: /var/www/html
+        command: php artisan horizon
+        restart: always
+        depends_on:
+            - app
+
+    scheduler-worker:
+        build:
+            context: .
+            dockerfile: .docker/worker/Dockerfile
+        volumes:
+            - .:/var/www/html
+        working_dir: /var/www/html
+        command: php artisan schedule:work
+        restart: always
+        depends_on:
+            - app
+
+volumes:
+    redis_data:
+    db_data:
