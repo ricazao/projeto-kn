@@ -52,6 +52,16 @@ return [
 
     'channels' => [
 
+        'mail' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/mail.log'),
+        ],
+
+        'billets' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/billets.log'),
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', env('LOG_STACK', 'single')),
